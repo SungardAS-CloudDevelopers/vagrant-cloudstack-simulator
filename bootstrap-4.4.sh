@@ -50,7 +50,7 @@ export PATH=${M2_HOME}/bin:${PATH}
 
 # CloudStack Source
 cd /root
-git clone https://github.com/dgrizzanti/cloudstack.git
+git clone https://github.com/SungardAS-CloudDevelopers/cloudstack.git
 cd cloudstack
 git checkout -t origin/4.4
 
