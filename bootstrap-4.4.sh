@@ -110,7 +110,9 @@ rm -rf Python*
 wget https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py
 python2.7 ez_setup.py
 easy_install-2.7 pip
-rm setuptools-3.4.4.zip
+
+# clean up the setup zip file, while being tolerant of the version numbers
+rm setuptools-*zip 
 rm ez_setup.py
 
 cd $cloudstack_dir/tools/marvin
