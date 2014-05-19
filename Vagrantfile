@@ -15,6 +15,6 @@ Vagrant.configure("2") do |config|
 
   config.vm.provision :shell, :inline => "sudo ln -sf /usr/share/zoneinfo/#{timezone} /etc/localtime"
 
-  config.vm.provision :shell, path: "bootstrap-4.4.sh"
+  config.vm.provision :shell, path: "bootstrap-4.3.sh"
   config.vm.synced_folder ".", "/tmp/cloudstack-simulator"
 end
