@@ -14,20 +14,43 @@ yum install \
   ant-devel \
   erlang \
   gcc \
-  java-1.6.0-openjdk \
-  java-1.6.0-openjdk-devel \
+  java-1.7.0-openjdk \
+  java-1.7.0-openjdk-devel \
   mkisofs \
   mysql \
-  MySQL-python \
   mysql-server \
   nc \
   openssh-clients \
-  python \
-  python-devel \
-  python-pip \
   tomcat6 \
   telnet \
+  openssl-devel \
   -y
+
+# install python 2.7
+echo "/usr/local/lib" >> /etc/ld.so.conf
+wget http://python.org/ftp/python/2.7.6/Python-2.7.6.tar.xz
+tar xf Python-2.7.6.tar.xz
+cd Python-2.7.6
+./configure --prefix=/usr/local --enable-unicode=ucs4 --enable-shared LDFLAGS="-Wl,-rpath /usr/local/lib"
+make && make altinstall
+cd ..
+rm -rf Python*
+
+# this is not recommended, but installing two pythons is confusing:
+cd /usr/local/bin
+ln -s /usr/local/bin/python2.7 python
+
+# Configure users to use this environment in the future (as well as THIS run):
+echo 'export M2_HOME=/usr/local/apache-maven-3.0.5' >> /etc/bashrc
+echo 'export PATH=/usr/local/bin:${PATH}:${M2_HOME}/bin' >> /etc/bashrc
+export M2_HOME=/usr/local/apache-maven-3.0.5
+export PATH=/usr/local/bin:${M2_HOME}/bin:${PATH}
+
+# install setuptools + pip for python 2.7
+cd ~/
+wget https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py
+python2.7 ez_setup.py
+easy_install-2.7 pip
 
 # RabbitMQ
 rpm -i http://www.rabbitmq.com/releases/rabbitmq-server/v3.2.3/rabbitmq-server-3.2.3-1.noarch.rpm
@@ -42,8 +65,6 @@ chkconfig --level 345 mysqld on
 cd /usr/local
 wget http://www.us.apache.org/dist/maven/maven-3/3.0.5/binaries/apache-maven-3.0.5-bin.tar.gz
 tar -zxvf apache-maven-3.0.5-bin.tar.gz
-export M2_HOME=/usr/local/apache-maven-3.0.5
-export PATH=${M2_HOME}/bin:${PATH}
 
 # CloudStack Source
 cd /root
@@ -73,6 +94,8 @@ mysql -uroot cloud -e "update configuration set value = 0 where name like 'max.a
 # CloudStack Configuration
 /etc/init.d/cloudstack-simulator start
 pip install argparse
+pip install mysql-connector-python --allow-external mysql-connector-python
+
 while ! nc -vz localhost 8096; do sleep 10; done # Wait for CloudStack to start
 /etc/init.d/cloudstack-simulator stop
 sleep 10
@@ -82,14 +105,15 @@ sleep 10
 while ! nc -vz localhost 8096; do sleep 10; done # Wait for CloudStack to start
 mysql -uroot cloud -e "update configuration set value = 'false' where name = 'router.version.check';"
 
+# So, the mysql-connector-python needs to be installed specially, (see above), so let us mess with the setup script for marvin
+sed -i 's,"mysql-connector-python",#"mysql-connector-python",g' tools/marvin/setup.py
+
 # Set up the simulator
 mvn -Pdeveloper,marvin.sync -Dendpoint=localhost -pl :cloud-marvin
-mvn -Pdeveloper,marvin.setup -Dmarvin.config=setup/dev/advanced.cfg -pl :cloud-marvin integration-test || true
+mvn -Pdeveloper,marvin.setup -Dmarvin.config=setup/dev/advanced.cfg -pl :cloud-marvin integration-test
 
-# this is really awful, but marvin writes this file and we have up update it and run again...
-# Fix crypto fast math issue
-cp $source_dir/number.py /usr/lib64/python2.6/site-packages/Crypto/Util/number.py
-mvn -Pdeveloper,marvin.setup -Dmarvin.config=setup/dev/advanced.cfg -pl :cloud-marvin integration-test || true
+# to revert the setup file:
+#sed -i tools/marvin/setup.py 's,"mysql-connector-python",#"mysql-connector-python",g'
 
 /etc/init.d/cloudstack-simulator stop
 
