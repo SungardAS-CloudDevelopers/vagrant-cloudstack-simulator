@@ -24,6 +24,7 @@ yum install \
   tomcat6 \
   telnet \
   openssl-devel \
+  ncurses-devel \
   -y
 
 # install python 2.7
@@ -86,7 +87,9 @@ mvn -Pdeveloper -pl developer -Ddeploydb;mvn -Pdeveloper -pl developer -Ddeployd
 # mysql overwrites
 mysql -uroot cloud -e "update service_offering set ram_size = 32;"
 mysql -uroot cloud -e "update vm_template set enable_password = 1 where name like '%CentOS%';"
-mysql -uroot cloud -e "insert into hypervisor_capabilities values (100,'100','Simulator','default',50,1,6,NULL,0,1);"
+
+# commented out due to error:
+#mysql -uroot cloud -e "insert into hypervisor_capabilities values (100,'100','Simulator','default',50,1,6,NULL,0,1);"
 mysql -uroot cloud -e "update user set api_key = 'F0Hrpezpz4D3RBrM6CBWadbhzwQMLESawX-yMzc5BCdmjMon3NtDhrwmJSB1IBl7qOrVIT4H39PTEJoDnN-4vA' where id = 2;"
 mysql -uroot cloud -e "update user set secret_key = 'uWpZUVnqQB4MLrS_pjHCRaGQjX62BTk_HU8uiPhEShsY7qGsrKKFBLlkTYpKsg1MzBJ4qWL0yJ7W7beemp-_Ng' where id = 2;"
 mysql -uroot cloud -e "update configuration set value = 0 where name like 'max.account.%';"
@@ -95,6 +98,7 @@ mysql -uroot cloud -e "update configuration set value = 0 where name like 'max.a
 /etc/init.d/cloudstack-simulator start
 pip install argparse
 pip install mysql-connector-python --allow-external mysql-connector-python
+pip install ipython[all]
 
 while ! nc -vz localhost 8096; do sleep 10; done # Wait for CloudStack to start
 /etc/init.d/cloudstack-simulator stop
